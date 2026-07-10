@@ -1,0 +1,5 @@
+allowBuilds:
+  '@swc/core': false
+  '@tailwindcss/oxide': true
+  cbor-extract: false
+  esbuild: true
