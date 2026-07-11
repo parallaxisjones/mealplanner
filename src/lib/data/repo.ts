@@ -55,3 +55,8 @@ export async function getWorkspaceUrl(): Promise<AutomergeUrl> {
 	localStorage.setItem(ROOT_KEY, workspace.url);
 	return workspace.url;
 }
+
+/** Point the app at a different workspace root (used when importing a backup). */
+export function setWorkspaceRoot(url: AutomergeUrl): void {
+	localStorage.setItem(ROOT_KEY, url);
+}

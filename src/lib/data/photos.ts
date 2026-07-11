@@ -41,6 +41,11 @@ export async function putPhoto(blob: Blob): Promise<string> {
 	return hash;
 }
 
+/** Get the raw stored blob for a photo hash (used by backup export). */
+export async function getPhotoBlob(hash: string): Promise<Blob | undefined> {
+	return get<Blob>(`photo:${hash}`);
+}
+
 /** Get a cached object URL for a stored photo, or null if it isn't present. */
 export async function getPhotoObjectUrl(hash: string): Promise<string | null> {
 	const cached = urlCache.get(hash);
