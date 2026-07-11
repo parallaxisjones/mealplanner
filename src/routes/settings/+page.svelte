@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { exportWorkspace, importWorkspace } from '$lib/data/backup';
+	import { exportWorkspace, importWorkspace, importRecipesOnly } from '$lib/data/backup';
 
 	let busy = $state(false);
 	let message = $state('');
@@ -50,6 +50,24 @@
 			busy = false;
 		}
 	}
+
+	async function onAddRecipesFile(e: Event) {
+		const input = e.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		input.value = '';
+		if (!file) return;
+		busy = true;
+		message = '';
+		try {
+			const data = new Uint8Array(await file.arrayBuffer());
+			const s = await importRecipesOnly(data);
+			message = `Added ${s.recipes} recipes. Reloading…`;
+			setTimeout(() => location.reload(), 900);
+		} catch (e) {
+			message = `Add failed: ${e instanceof Error ? e.message : String(e)}`;
+			busy = false;
+		}
+	}
 </script>
 
 <header class="px-4 pt-6 pb-3">
@@ -81,6 +99,18 @@
 					accept=".mealplan,.zip,application/zip"
 					class="hidden"
 					onchange={onImportFile}
+				/>
+			</label>
+			<label
+				class="cursor-pointer rounded-full border border-line px-5 py-2 text-sm text-ink transition hover:border-herb"
+			>
+				Add recipes from a file
+				<input
+					type="file"
+					accept=".mealplan,.zip,application/zip"
+					class="hidden"
+					data-testid="add-recipes-input"
+					onchange={onAddRecipesFile}
 				/>
 			</label>
 		</div>
