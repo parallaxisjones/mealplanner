@@ -35,7 +35,7 @@ function main(): void {
 	let skipped = 0;
 
 	for (const f of files) {
-		const res = analyzeMarkdownRecipe(readFileSync(f, 'utf8'));
+		const res = analyzeMarkdownRecipe(readFileSync(f, 'utf8'), basename(f).replace(/\.md$/i, ''));
 		if (res.ok) {
 			recipes.push(parsedToRecipeDoc(res.recipe));
 		} else {

@@ -63,7 +63,7 @@ function splitFrontmatter(md: string): { fm: Frontmatter; body: string } {
 	return { fm, body };
 }
 
-export function analyzeMarkdownRecipe(md: string): AnalyzeResult {
+export function analyzeMarkdownRecipe(md: string, fallbackTitle?: string): AnalyzeResult {
 	const { fm, body } = splitFrontmatter(md);
 	const lines = body.split(/\r?\n/);
 
@@ -123,6 +123,8 @@ export function analyzeMarkdownRecipe(md: string): AnalyzeResult {
 		}
 	}
 
+	if (!title && fallbackTitle && fallbackTitle.trim()) title = fallbackTitle.trim();
+
 	if (!title)
 		return { ok: false, reason: 'no title', hadTitle: false, ingredientCount: ingredients.length, stepCount: steps.length };
 	if (ingredients.length < 2)
@@ -157,7 +159,7 @@ export function analyzeMarkdownRecipe(md: string): AnalyzeResult {
 	};
 }
 
-export function parseMarkdownRecipe(md: string): ParsedMarkdownRecipe | null {
-	const res = analyzeMarkdownRecipe(md);
+export function parseMarkdownRecipe(md: string, fallbackTitle?: string): ParsedMarkdownRecipe | null {
+	const res = analyzeMarkdownRecipe(md, fallbackTitle);
 	return res.ok ? res.recipe : null;
 }

@@ -103,6 +103,17 @@ const moc = `# Nonna Donini's Cookbook
 - [[Amaretti]]
 `;
 
+const noH1 = `## Ingredients
+
+- 1 lb ground beef
+- 1 cup breadcrumbs
+
+## Instructions
+
+1. Mix ingredients.
+2. Bake at 375F for 20 minutes.
+`;
+
 describe('parseMarkdownRecipe', () => {
   it('parses a web clip: title, source_url from the title link, ingredients, steps', () => {
     const r = parseMarkdownRecipe(webClip)!;
@@ -150,6 +161,23 @@ describe('parseMarkdownRecipe', () => {
 
   it('returns null for a MOC / table-of-contents file', () => {
     expect(parseMarkdownRecipe(moc)).toBeNull();
+  });
+});
+
+describe('fallback title', () => {
+  it('uses the fallback title when the note has no H1', () => {
+    const r = parseMarkdownRecipe(noH1, 'Meatball Sliders')!;
+    expect(r).not.toBeNull();
+    expect(r.title).toBe('Meatball Sliders');
+  });
+
+  it('still returns null when there is no H1 and no fallback title', () => {
+    expect(parseMarkdownRecipe(noH1)).toBeNull();
+  });
+
+  it('prefers an explicit H1 over the fallback title', () => {
+    const r = parseMarkdownRecipe(nonna, 'Some Filename')!;
+    expect(r.title).toBe('Risotto');
   });
 });
 
