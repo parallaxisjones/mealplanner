@@ -15,6 +15,7 @@
 		"test:e2e": "playwright install && playwright test"
 	},
 	"devDependencies": {
+		"@cloudflare/workers-types": "^5.20260710.1",
 		"@playwright/test": "^1.60.0",
 		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/kit": "^2.63.0",
@@ -27,7 +28,8 @@
 		"tailwindcss": "^4.3.0",
 		"typescript": "^6.0.3",
 		"vite": "^8.0.16",
-		"vitest": "^4.1.8"
+		"vitest": "^4.1.8",
+		"wrangler": "^4.110.0"
 	},
 	"dependencies": {
 		"@automerge/automerge": "^3.2.6",

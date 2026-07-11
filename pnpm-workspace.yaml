@@ -3,3 +3,5 @@ allowBuilds:
   '@tailwindcss/oxide': true
   cbor-extract: false
   esbuild: true
+  sharp: false
+  workerd: true
