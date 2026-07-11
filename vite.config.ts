@@ -3,6 +3,9 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
 import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { SvelteKitPWA } from '@vite-pwa/sveltekit';
+
+const base = (process.env.BASE_PATH ?? '') as '' | `/${string}`;
 
 export default defineConfig({
 	plugins: [
@@ -13,19 +16,50 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-			// Static single-page-app: SPA fallback so the client router owns every route.
-			adapter: adapter({ fallback: 'index.html', precompress: false, strict: false }),
+			// Static SPA. Prerendered static routes become their own .html; dynamic
+			// routes fall back to 404.html, which GitHub Pages serves for unknown paths
+			// so client-side deep links (e.g. /recipes/<url>) still boot the app.
+			adapter: adapter({ fallback: '404.html', precompress: false, strict: false }),
 			// GitHub Pages serves the app under a repo subpath in CI; empty in local dev.
-			paths: { base: (process.env.BASE_PATH ?? '') as '' | `/${string}` },
-			// The PWA plugin (added later) owns the service worker.
+			// relative: false → absolute asset URLs, so the 404.html SPA fallback works
+			// when serving deep links at any path depth.
+			paths: { base, relative: false },
+			// The PWA plugin owns the service worker.
 			serviceWorker: { register: false }
+		}),
+		SvelteKitPWA({
+			registerType: 'autoUpdate',
+			injectRegister: false,
+			strategies: 'generateSW',
+			scope: `${base}/`,
+			base: `${base}/`,
+			manifest: {
+				name: 'Meal Planner',
+				short_name: 'Meals',
+				description: 'A personal recipe keeper and weekly meal planner.',
+				start_url: `${base}/`,
+				scope: `${base}/`,
+				display: 'standalone',
+				background_color: '#faf8f4',
+				theme_color: '#2f5d50',
+				icons: [
+					{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+					{ src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+					{ src: 'icons/icon-512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+				]
+			},
+			workbox: {
+				// Precache the app shell + the Automerge wasm so it works fully offline.
+				globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,wasm}'],
+				maximumFileSizeToCacheInBytes: 5 * 1024 * 1024
+			},
+			devOptions: { enabled: false }
 		})
 	],
-	// The Automerge WASM is loaded via a `?url` asset import + initializeWasm(url),
-	// so no WASM Vite plugin is needed. Pre-bundle the Automerge packages at server
-	// start (rather than on-demand) so (a) their CommonJS deps like eventemitter3
-	// get correct ESM-interop default exports, and (b) Vite doesn't trigger a
-	// disruptive mid-session "new dependencies optimized -> full reload".
+	// The Automerge WASM is loaded via a `?url` asset import + initializeWasm(url).
+	// Pre-bundle the Automerge packages at server start so their CommonJS deps
+	// (eventemitter3, cbor-x, …) get correct ESM-interop and Vite doesn't do a
+	// disruptive mid-session reload.
 	optimizeDeps: {
 		include: [
 			'@automerge/automerge/slim',

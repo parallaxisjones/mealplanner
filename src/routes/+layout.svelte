@@ -3,8 +3,17 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { page } from '$app/state';
 	import { base } from '$app/paths';
+	import { onMount } from 'svelte';
 
 	let { children } = $props();
+
+	// Register the generated service worker for offline use (production only; it
+	// self-updates via the autoUpdate/generateSW strategy).
+	onMount(() => {
+		if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+			navigator.serviceWorker.register(`${base}/sw.js`, { scope: `${base}/` }).catch(() => {});
+		}
+	});
 
 	const tabs = [
 		{ href: '/', label: 'Recipes', active: (id: string) => id === '/' || id.startsWith('/recipes') },
