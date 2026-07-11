@@ -12,6 +12,7 @@ export interface RecipeFields {
 	tags: string[];
 	source_url: string | null;
 	notes: string | null;
+	photo_hash: string | null;
 }
 
 /** A fresh, empty recipe document (unsaved). */
@@ -58,6 +59,7 @@ export async function updateRecipe(url: string, fields: RecipeFields): Promise<v
 		r.tags = fields.tags;
 		r.source_url = fields.source_url;
 		r.notes = fields.notes;
+		r.photo_hash = fields.photo_hash;
 		r.updated_at = new Date().toISOString();
 	});
 	await repo.flush([handle.documentId]);

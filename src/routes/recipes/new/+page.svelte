@@ -11,7 +11,8 @@
 		steps: [],
 		tags: [],
 		source_url: null,
-		notes: null
+		notes: null,
+		photo_hash: null
 	};
 
 	async function handleSave(fields: RecipeFields) {

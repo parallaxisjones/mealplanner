@@ -3,6 +3,8 @@
 	import IngredientEditor from './IngredientEditor.svelte';
 	import StepEditor from './StepEditor.svelte';
 	import TagEditor from './TagEditor.svelte';
+	import RecipePhoto from './RecipePhoto.svelte';
+	import { downscaleImage, putPhoto } from '$lib/data/photos';
 	import type { RecipeFields } from '$lib/data/recipes';
 
 	let {
@@ -30,6 +32,7 @@
 		tags: string[];
 		source_url: string;
 		notes: string;
+		photo_hash: string | null;
 	}
 	const seed = untrack(() => $state.snapshot(initial)) as RecipeFields;
 	let model = $state<EditModel>({
@@ -39,9 +42,24 @@
 		steps: [...seed.steps],
 		tags: [...seed.tags],
 		source_url: seed.source_url ?? '',
-		notes: seed.notes ?? ''
+		notes: seed.notes ?? '',
+		photo_hash: seed.photo_hash
 	});
 	let saving = $state(false);
+	let photoBusy = $state(false);
+
+	async function onPickPhoto(e: Event) {
+		const input = e.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file) return;
+		photoBusy = true;
+		try {
+			model.photo_hash = await putPhoto(await downscaleImage(file));
+		} finally {
+			photoBusy = false;
+			input.value = '';
+		}
+	}
 
 	async function save() {
 		saving = true;
@@ -56,7 +74,8 @@
 				steps: model.steps.map((s) => s.trim()).filter((s) => s !== ''),
 				tags: model.tags,
 				source_url: model.source_url.trim() || null,
-				notes: model.notes.trim() || null
+				notes: model.notes.trim() || null,
+				photo_hash: model.photo_hash
 			});
 		} finally {
 			saving = false;
@@ -90,6 +109,33 @@
 			/>
 		</label>
 	</div>
+
+	<section>
+		{@render heading('Photo')}
+		{#if model.photo_hash}
+			<RecipePhoto
+				hash={model.photo_hash}
+				alt=""
+				class="mb-3 max-h-56 w-full rounded-lg border border-line object-cover"
+			/>
+		{/if}
+		<div class="flex items-center gap-3">
+			<label
+				class="cursor-pointer rounded-full border border-line px-4 py-1.5 text-sm text-ink transition hover:border-herb"
+			>
+				{model.photo_hash ? 'Replace photo' : 'Add photo'}
+				<input type="file" accept="image/*" class="hidden" onchange={onPickPhoto} />
+			</label>
+			{#if model.photo_hash}
+				<button
+					type="button"
+					onclick={() => (model.photo_hash = null)}
+					class="font-mono text-xs text-danger hover:underline">Remove</button
+				>
+			{/if}
+			{#if photoBusy}<span class="text-xs text-muted">Processing…</span>{/if}
+		</div>
+	</section>
 
 	<section>
 		{@render heading('Ingredients')}

@@ -7,6 +7,7 @@
 	import { updateRecipe, deleteRecipe, type RecipeFields } from '$lib/data/recipes';
 	import type { RecipeDoc } from '$lib/domain/types';
 	import RecipeForm from '$lib/components/RecipeForm.svelte';
+	import RecipePhoto from '$lib/components/RecipePhoto.svelte';
 
 	const id = $derived(page.params.id ?? '');
 	const recipe = useDocument<RecipeDoc>(() => id as AutomergeUrl);
@@ -26,7 +27,8 @@
 			steps: [...doc.steps],
 			tags: [...doc.tags],
 			source_url: doc.source_url,
-			notes: doc.notes
+			notes: doc.notes,
+			photo_hash: doc.photo_hash
 		};
 	}
 
@@ -97,6 +99,14 @@
 					>
 				{/each}
 			</div>
+		{/if}
+
+		{#if recipe.doc.photo_hash}
+			<RecipePhoto
+				hash={recipe.doc.photo_hash}
+				alt={recipe.doc.title}
+				class="mt-5 max-h-72 w-full rounded-xl border border-line object-cover"
+			/>
 		{/if}
 
 		{#if recipe.doc.ingredients.length}
