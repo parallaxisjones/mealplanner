@@ -108,12 +108,21 @@
 			<h1 class="font-serif text-3xl leading-tight text-ink">
 				{recipe.doc.title || 'Untitled recipe'}
 			</h1>
-			<button
-				type="button"
-				onclick={() => (editing = true)}
-				class="shrink-0 rounded-full border border-line px-4 py-1.5 text-sm text-ink transition hover:border-herb"
-				>Edit</button
-			>
+			<div class="flex shrink-0 gap-2">
+				{#if recipe.doc.steps.length}
+					<a
+						href={`${base}/recipes/${encodeURIComponent(id)}/cook`}
+						class="rounded-full bg-btn px-4 py-1.5 text-sm font-semibold text-on-btn transition hover:opacity-90"
+						>Cook</a
+					>
+				{/if}
+				<button
+					type="button"
+					onclick={() => (editing = true)}
+					class="rounded-full border border-line px-4 py-1.5 text-sm text-ink transition hover:border-herb"
+					>Edit</button
+				>
+			</div>
 		</div>
 
 		{#if recipe.doc.servings}
