@@ -26,6 +26,19 @@ export const MEAL_SLOTS: MealSlot[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 
 // ---------- Embedded value objects ----------
 
+/** Macros for an ingredient. `per100g` = looked up (scaled by mass); `as_entered` = a manual override that IS this ingredient's contribution. */
+export interface NutritionData {
+	calories: number | null;
+	protein_g: number | null;
+	fat_g: number | null;
+	carbs_g: number | null;
+	fiber_g: number | null;
+	sodium_mg: number | null;
+	source: 'usda' | 'off' | 'manual';
+	basis: 'per100g' | 'as_entered';
+	fetched_at: ISOTime;
+}
+
 export interface Ingredient {
 	/** 0.5 for "1/2"; low bound for a range; null if unspecified. */
 	quantity: number | null;
@@ -36,6 +49,8 @@ export interface Ingredient {
 	notes: string | null;
 	/** The raw typed text, always preserved for display fidelity. */
 	original: string;
+	/** Optional macros (schema 2). Absent on schema-1 docs. */
+	nutrition?: NutritionData | null;
 }
 
 export interface PlanEntry {
@@ -68,7 +83,8 @@ export interface ShoppingItem {
 // ---------- Documents (one Automerge doc each, except embedded value objects) ----------
 
 export interface RecipeDoc {
-	schema: 1;
+	/** 2 once any ingredient carries `nutrition`; 1 otherwise. Additive — reads default-on-missing. */
+	schema: 1 | 2;
 	id: UUID;
 	title: string;
 	servings: number | null;
@@ -117,4 +133,12 @@ export interface WorkspaceDoc {
 	/** Week key -> meal-plan document URL. */
 	plans: Record<WeekKey, MealPlanUrl>;
 	shopping_list_url: ShoppingListUrl | null;
+	/** Shared, synced nutrition cache doc (created lazily; absent on older workspaces). */
+	nutrition_cache_url?: DocUrl | null;
+}
+
+/** Shared cache of ingredient nutrition, keyed by normalized ingredient name. */
+export interface NutritionCacheDoc {
+	schema: 1;
+	entries: Record<string, NutritionData>;
 }

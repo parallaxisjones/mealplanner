@@ -15,6 +15,7 @@
 	import type { RecipeDoc, WorkspaceDoc } from '$lib/domain/types';
 	import RecipeForm from '$lib/components/RecipeForm.svelte';
 	import RecipePhoto from '$lib/components/RecipePhoto.svelte';
+	import NutritionPanel from '$lib/components/NutritionPanel.svelte';
 
 	const id = $derived(page.params.id ?? '');
 	const recipe = useDocument<RecipeDoc>(() => id as AutomergeUrl);
@@ -219,5 +220,7 @@
 				</div>
 			</section>
 		{/if}
+
+		<NutritionPanel recipe={recipe.doc} recipeUrl={id} />
 	</article>
 {/if}

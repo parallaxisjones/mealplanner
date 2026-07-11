@@ -1,11 +1,13 @@
 /// <reference types="@cloudflare/workers-types" />
 import { handleImport } from './import';
+import { handleNutrition } from './nutrition';
 
 // Single Worker for the Meal Planner: serves the static SPA (ASSETS binding) and
 // hosts /api/* (recipe import, nutrition) and /sync/* (Automerge sync DO).
 
 interface Env {
 	ASSETS: Fetcher;
+	USDA_API_KEY?: string;
 }
 
 export default {
@@ -17,6 +19,9 @@ export default {
 		}
 		if (url.pathname === '/api/import') {
 			return handleImport(request);
+		}
+		if (url.pathname === '/api/nutrition') {
+			return handleNutrition(request, env);
 		}
 		if (url.pathname.startsWith('/api/')) {
 			return new Response('Not implemented yet', { status: 501 });

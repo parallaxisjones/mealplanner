@@ -2,8 +2,9 @@
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 	import type { AutomergeUrl } from '@automerge/automerge-repo/slim';
-	import { getWorkspaceUrl } from '$lib/data/repo';
+	import { getRepo, getWorkspaceUrl } from '$lib/data/repo';
 	import { useDocument } from '$lib/data/useDocument.svelte';
+	import { dayTotals } from '$lib/domain/nutrition';
 	import {
 		getOrCreatePlan,
 		addPlanEntry,
@@ -20,7 +21,7 @@
 		formatWeekRange,
 		formatDayLabel
 	} from '$lib/domain/week';
-	import type { MealPlanDoc, MealSlot, WorkspaceDoc } from '$lib/domain/types';
+	import type { MealPlanDoc, MealSlot, RecipeDoc, WorkspaceDoc } from '$lib/domain/types';
 
 	const SLOTS: { key: MealSlot; label: string }[] = [
 		{ key: 'breakfast', label: 'Breakfast' },
@@ -56,6 +57,28 @@
 	});
 	const recipeMap = $derived(new Map(recipes.map((r) => [r.url, r])));
 
+	// Full recipe docs for the week's planned entries (needed for nutrition totals).
+	let recipeDocs = $state(new Map<string, RecipeDoc>());
+	$effect(() => {
+		const doc = plan.doc;
+		if (!doc) return;
+		const urls = new Set<string>();
+		for (const date of Object.keys(doc.days))
+			for (const slot of SLOTS) for (const e of doc.days[date][slot.key]) urls.add(e.recipe_id);
+		void (async () => {
+			const repo = await getRepo();
+			const m = new Map<string, RecipeDoc>();
+			for (const u of urls) {
+				try {
+					m.set(u, (await repo.find<RecipeDoc>(u as AutomergeUrl)).doc());
+				} catch {
+					/* skip missing */
+				}
+			}
+			recipeDocs = m;
+		})();
+	});
+
 	const dates = $derived(week ? weekToDates(week) : []);
 	let selectedDay = $state(0);
 	$effect(() => {
@@ -65,6 +88,17 @@
 		const idx = weekToDates(week).indexOf(todayIso);
 		selectedDay = idx >= 0 ? idx : 0;
 	});
+
+	const dayStrip = $derived.by(() => {
+		const day = plan.doc?.days?.[dates[selectedDay]];
+		if (!day) return null;
+		const entries = SLOTS.flatMap((s) =>
+			day[s.key].map((e) => ({ recipeId: e.recipe_id, servings: e.servings }))
+		);
+		if (entries.length === 0) return null;
+		return dayTotals(entries, recipeDocs);
+	});
+	const round = (n: number | null) => Math.round(n ?? 0);
 
 	function go(delta: number) {
 		week = addWeeks(week, delta);
@@ -184,6 +218,13 @@
 				>
 			{/each}
 		</div>
+		{#if dayStrip && dayStrip.totals.calories != null}
+			<p class="mb-3 font-mono text-[0.7rem] text-muted">
+				~{round(dayStrip.totals.calories)} kcal · {round(dayStrip.totals.protein_g)}g P · {round(
+					dayStrip.totals.fat_g
+				)}g F · {round(dayStrip.totals.carbs_g)}g C{#if !dayStrip.complete} · partial{/if}
+			</p>
+		{/if}
 		<div class="space-y-3">
 			{#each SLOTS as slot (slot.key)}
 				<div class="rounded-xl border border-line bg-surface p-3">

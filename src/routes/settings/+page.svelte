@@ -98,11 +98,22 @@
 
 	<section>
 		<h2 class="mb-2 border-b border-line pb-1 font-mono text-xs tracking-widest text-muted uppercase">
+			Nutrition
+		</h2>
+		<p class="text-sm text-muted">
+			Macro estimates use Open Food Facts (free, no setup) and are approximate — override any
+			ingredient from its recipe. USDA FoodData Central can be enabled for more coverage by setting a
+			<code class="font-mono text-xs">USDA_API_KEY</code> secret on the Worker.
+		</p>
+	</section>
+
+	<section>
+		<h2 class="mb-2 border-b border-line pb-1 font-mono text-xs tracking-widest text-muted uppercase">
 			About
 		</h2>
 		<p class="text-sm text-muted">
-			Meal Planner · local-first, offline-capable. No account, no server — everything stays on your
-			device.
+			Meal Planner · local-first and offline-capable. Your recipes live in this browser; a small
+			Cloudflare Worker powers link import and nutrition lookups.
 		</p>
 	</section>
 </div>
