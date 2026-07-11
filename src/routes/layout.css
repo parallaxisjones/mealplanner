@@ -1,7 +1,58 @@
 @import 'tailwindcss';
 
+/*
+ * "Recipe box" design system — warm paper, herb green, cookbook serif titles,
+ * typewriter-mono metadata, ruled index-card lines. Semantic colors are CSS
+ * variables that swap for dark mode; @theme inline maps Tailwind utilities
+ * (bg-surface, text-ink, …) onto them so the utilities follow the theme.
+ */
+@theme inline {
+	--color-bg: var(--c-bg);
+	--color-surface: var(--c-surface);
+	--color-ink: var(--c-ink);
+	--color-muted: var(--c-muted);
+	--color-herb: var(--c-herb);
+	--color-line: var(--c-line);
+	--color-chip: var(--c-chip);
+	--color-chip-ink: var(--c-chip-ink);
+	--color-btn: var(--c-btn);
+	--color-on-btn: var(--c-on-btn);
+	--color-danger: var(--c-danger);
+
+	--font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+	--font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+	--font-mono: ui-monospace, 'SF Mono', 'Menlo', 'Cascadia Code', 'Roboto Mono', monospace;
+}
+
 :root {
 	color-scheme: light dark;
+	--c-bg: #faf8f4;
+	--c-surface: #fffdf9;
+	--c-ink: #26241f;
+	--c-muted: #6b6558;
+	--c-herb: #2f5d50;
+	--c-line: #e7e2d6;
+	--c-chip: #ece7da;
+	--c-chip-ink: #4a5c46;
+	--c-btn: #2f5d50;
+	--c-on-btn: #f7f4ec;
+	--c-danger: #a6412e;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--c-bg: #1b1a17;
+		--c-surface: #24221d;
+		--c-ink: #ede7dd;
+		--c-muted: #a69e8e;
+		--c-herb: #86b6a5;
+		--c-line: #34302a;
+		--c-chip: #302d26;
+		--c-chip-ink: #bcccb2;
+		--c-btn: #35695b;
+		--c-on-btn: #f4f7f1;
+		--c-danger: #db8a76;
+	}
 }
 
 html,
@@ -10,14 +61,13 @@ body {
 }
 
 body {
-	background: #f9fafb;
-	color: #111827;
+	background: var(--c-bg);
+	color: var(--c-ink);
+	font-family: var(--font-sans);
 	-webkit-font-smoothing: antialiased;
 }
 
-@media (prefers-color-scheme: dark) {
-	body {
-		background: #030712;
-		color: #f3f4f6;
-	}
+/* The signature ruled line under recipe titles / meta. */
+.rule {
+	border-bottom: 1px solid var(--c-line);
 }

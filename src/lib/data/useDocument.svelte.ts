@@ -38,13 +38,21 @@ export function useDocument<T>(url: () => AutomergeUrl | undefined): ReactiveDoc
 		};
 
 		void (async () => {
-			const repo = await getRepo();
-			const h = await repo.find<T>(u);
-			if (disposed) return;
-			handle = h;
-			doc = h.doc();
-			ready = true;
-			h.on('change', onChange);
+			try {
+				const repo = await getRepo();
+				const h = await repo.find<T>(u);
+				if (disposed) return;
+				handle = h;
+				doc = h.doc();
+				ready = true;
+				h.on('change', onChange);
+			} catch {
+				// Unknown/deleted document — surface as "loaded but empty".
+				if (!disposed) {
+					doc = undefined;
+					ready = true;
+				}
+			}
 		})();
 
 		return () => {
