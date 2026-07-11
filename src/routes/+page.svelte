@@ -50,11 +50,17 @@
 
 <header class="flex items-baseline justify-between px-4 pt-6 pb-3">
 	<h1 class="font-serif text-3xl text-ink">Recipes</h1>
-	<a
-		href={`${base}/recipes/new`}
-		class="rounded-full bg-btn px-4 py-2 text-sm font-semibold text-on-btn shadow-sm transition hover:opacity-90"
-		>+ New</a
-	>
+	<div class="flex items-center gap-4">
+		<a
+			href={`${base}/collections`}
+			class="font-mono text-xs tracking-wide text-herb uppercase hover:underline">Collections</a
+		>
+		<a
+			href={`${base}/recipes/new`}
+			class="rounded-full bg-btn px-4 py-2 text-sm font-semibold text-on-btn shadow-sm transition hover:opacity-90"
+			>+ New</a
+		>
+	</div>
 </header>
 
 {#if ws.ready && summaries.length > 0}

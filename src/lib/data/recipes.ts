@@ -1,7 +1,7 @@
 import type { AutomergeUrl } from '@automerge/automerge-repo/slim';
 import { getRepo, getWorkspaceUrl } from './repo';
 import { uuidv7 } from '$lib/domain/ids';
-import type { Ingredient, RecipeDoc, WorkspaceDoc } from '$lib/domain/types';
+import type { CollectionDoc, Ingredient, RecipeDoc, WorkspaceDoc } from '$lib/domain/types';
 
 /** The user-editable fields of a recipe (everything except identity/timestamps/photo). */
 export interface RecipeFields {
@@ -65,17 +65,34 @@ export async function updateRecipe(url: string, fields: RecipeFields): Promise<v
 	await repo.flush([handle.documentId]);
 }
 
-/** Delete a recipe: remove it from the workspace index and from the repo. */
+/**
+ * Delete a recipe: remove it from the workspace index, from every collection
+ * that references it, and from the repo.
+ */
 export async function deleteRecipe(url: string): Promise<void> {
 	const repo = await getRepo();
 	const wsUrl = await getWorkspaceUrl();
 	const ws = await repo.find<WorkspaceDoc>(wsUrl);
+	const collectionIds = [...ws.doc().collection_ids];
 	ws.change((w) => {
 		const i = w.recipe_ids.indexOf(url);
 		if (i >= 0) w.recipe_ids.splice(i, 1);
 	});
+
+	const flushed = [ws.documentId];
+	for (const cid of collectionIds) {
+		const ch = await repo.find<CollectionDoc>(cid as AutomergeUrl);
+		if (ch.doc().recipe_ids.includes(url)) {
+			ch.change((c) => {
+				const i = c.recipe_ids.indexOf(url);
+				if (i >= 0) c.recipe_ids.splice(i, 1);
+			});
+			flushed.push(ch.documentId);
+		}
+	}
+
 	repo.delete(url as AutomergeUrl);
-	await repo.flush([ws.documentId]);
+	await repo.flush(flushed);
 }
 
 export interface RecipeSummary {

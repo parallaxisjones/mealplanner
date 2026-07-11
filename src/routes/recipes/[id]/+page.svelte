@@ -4,13 +4,43 @@
 	import { page } from '$app/state';
 	import type { AutomergeUrl } from '@automerge/automerge-repo/slim';
 	import { useDocument } from '$lib/data/useDocument.svelte';
+	import { getWorkspaceUrl } from '$lib/data/repo';
 	import { updateRecipe, deleteRecipe, type RecipeFields } from '$lib/data/recipes';
-	import type { RecipeDoc } from '$lib/domain/types';
+	import {
+		loadCollectionsForRecipe,
+		addRecipeToCollection,
+		removeRecipeFromCollection,
+		type CollectionMembership
+	} from '$lib/data/collections';
+	import type { RecipeDoc, WorkspaceDoc } from '$lib/domain/types';
 	import RecipeForm from '$lib/components/RecipeForm.svelte';
 	import RecipePhoto from '$lib/components/RecipePhoto.svelte';
 
 	const id = $derived(page.params.id ?? '');
 	const recipe = useDocument<RecipeDoc>(() => id as AutomergeUrl);
+
+	let wsUrl = $state<AutomergeUrl | undefined>(undefined);
+	$effect(() => {
+		void getWorkspaceUrl().then((u) => (wsUrl = u));
+	});
+	const workspace = useDocument<WorkspaceDoc>(() => wsUrl);
+
+	let memberships = $state<CollectionMembership[]>([]);
+	$effect(() => {
+		const cids = workspace.doc?.collection_ids;
+		if (!cids || !id) {
+			memberships = [];
+			return;
+		}
+		void loadCollectionsForRecipe([...cids], id).then((m) => (memberships = m));
+	});
+
+	async function toggleMembership(m: CollectionMembership) {
+		if (m.includes) await removeRecipeFromCollection(m.url, id);
+		else await addRecipeToCollection(m.url, id);
+		const cids = workspace.doc?.collection_ids ?? [];
+		memberships = await loadCollectionsForRecipe([...cids], id);
+	}
 
 	let editing = $state(false);
 	// Return to view mode whenever we navigate to a different recipe.
@@ -158,6 +188,26 @@
 					rel="noopener noreferrer"
 					class="font-mono text-xs break-all text-herb hover:underline">Source ↗</a
 				>
+			</section>
+		{/if}
+
+		{#if memberships.length}
+			<section class="mt-7">
+				<h2 class="mb-2.5 border-b border-line pb-1 font-mono text-xs tracking-widest text-muted uppercase">
+					Collections
+				</h2>
+				<div class="flex flex-wrap gap-1.5">
+					{#each memberships as m (m.url)}
+						<button
+							type="button"
+							onclick={() => toggleMembership(m)}
+							aria-pressed={m.includes}
+							class="rounded-full px-3 py-1 font-mono text-xs transition {m.includes
+								? 'bg-btn text-on-btn'
+								: 'border border-line text-ink hover:border-herb'}">{m.name}</button
+						>
+					{/each}
+				</div>
 			</section>
 		{/if}
 	</article>
