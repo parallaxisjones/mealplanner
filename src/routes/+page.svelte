@@ -56,6 +56,10 @@
 			class="font-mono text-xs tracking-wide text-herb uppercase hover:underline">Collections</a
 		>
 		<a
+			href={`${base}/recipes/import`}
+			class="font-mono text-xs tracking-wide text-herb uppercase hover:underline">Import</a
+		>
+		<a
 			href={`${base}/recipes/new`}
 			class="rounded-full bg-btn px-4 py-2 text-sm font-semibold text-on-btn shadow-sm transition hover:opacity-90"
 			>+ New</a

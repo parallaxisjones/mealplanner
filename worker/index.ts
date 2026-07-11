@@ -1,8 +1,8 @@
 /// <reference types="@cloudflare/workers-types" />
+import { handleImport } from './import';
 
 // Single Worker for the Meal Planner: serves the static SPA (ASSETS binding) and
-// will host /api/* (recipe import, nutrition) and /sync/* (Automerge sync DO).
-// Those endpoints are stubbed until their increments land.
+// hosts /api/* (recipe import, nutrition) and /sync/* (Automerge sync DO).
 
 interface Env {
 	ASSETS: Fetcher;
@@ -14,6 +14,9 @@ export default {
 
 		if (url.pathname === '/api/health') {
 			return Response.json({ ok: true, service: 'mealplanner' });
+		}
+		if (url.pathname === '/api/import') {
+			return handleImport(request);
 		}
 		if (url.pathname.startsWith('/api/')) {
 			return new Response('Not implemented yet', { status: 501 });
