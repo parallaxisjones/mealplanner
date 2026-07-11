@@ -98,6 +98,7 @@ export async function deleteRecipe(url: string): Promise<void> {
 export interface RecipeSummary {
 	url: string;
 	title: string;
+	servings: number | null;
 	tags: string[];
 	photoHash: string | null;
 	ingredientNames: string[];
@@ -113,6 +114,7 @@ export async function loadRecipeSummaries(urls: string[]): Promise<RecipeSummary
 		summaries.push({
 			url,
 			title: doc.title,
+			servings: doc.servings,
 			tags: doc.tags,
 			photoHash: doc.photo_hash,
 			ingredientNames: doc.ingredients.map((i) => i.name).filter(Boolean)
