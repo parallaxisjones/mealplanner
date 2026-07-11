@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import type { AutomergeUrl } from '@automerge/automerge-repo/slim';
 	import { getWorkspaceUrl } from '$lib/data/repo';
 	import { useDocument } from '$lib/data/useDocument.svelte';
@@ -8,6 +10,7 @@
 		removePlanEntry,
 		setPlanEntryServings
 	} from '$lib/data/mealplans';
+	import { generateFromWeek } from '$lib/data/shoppingList';
 	import { loadRecipeSummaries, type RecipeSummary } from '$lib/data/recipes';
 	import { createRecipeSearcher } from '$lib/domain/search';
 	import {
@@ -94,6 +97,11 @@
 		});
 		picker = null;
 	}
+
+	async function makeShoppingList() {
+		await generateFromWeek(week);
+		await goto(`${base}/list`);
+	}
 </script>
 
 {#snippet slotContent(date: string, slot: MealSlot, editable: boolean)}
@@ -132,7 +140,13 @@
 {/snippet}
 
 <header class="px-4 pt-6 pb-3">
-	<h1 class="font-serif text-3xl text-ink">Plan</h1>
+	<div class="flex items-baseline justify-between">
+		<h1 class="font-serif text-3xl text-ink">Plan</h1>
+		<button
+			onclick={makeShoppingList}
+			class="font-mono text-xs tracking-wide text-herb uppercase hover:underline">Shopping list →</button
+		>
+	</div>
 	<div class="mt-3 flex items-center justify-between">
 		<button
 			onclick={() => go(-1)}
