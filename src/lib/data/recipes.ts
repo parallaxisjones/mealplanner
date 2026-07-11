@@ -83,6 +83,7 @@ export interface RecipeSummary {
 	title: string;
 	tags: string[];
 	photoHash: string | null;
+	ingredientNames: string[];
 }
 
 /** Load lightweight summaries for a set of recipe URLs, preserving order. */
@@ -92,7 +93,13 @@ export async function loadRecipeSummaries(urls: string[]): Promise<RecipeSummary
 	for (const url of urls) {
 		const handle = await repo.find<RecipeDoc>(url as AutomergeUrl);
 		const doc = handle.doc();
-		summaries.push({ url, title: doc.title, tags: doc.tags, photoHash: doc.photo_hash });
+		summaries.push({
+			url,
+			title: doc.title,
+			tags: doc.tags,
+			photoHash: doc.photo_hash,
+			ingredientNames: doc.ingredients.map((i) => i.name).filter(Boolean)
+		});
 	}
 	return summaries;
 }
