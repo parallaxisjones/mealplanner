@@ -225,3 +225,44 @@ export async function importWorkspace(data: Uint8Array): Promise<ImportSummary> 
 		items: items.length
 	};
 }
+
+/**
+ * Append the recipes from a `.mealplan` zip to the CURRENT workspace, leaving
+ * existing recipes, collections, plans, and shopping list untouched. Each recipe
+ * gets a fresh Automerge URL; only recipes are imported (collections/plans in the
+ * file are ignored). Does not change the workspace root.
+ */
+export async function importRecipesOnly(data: Uint8Array): Promise<{ recipes: number }> {
+	const files = unzipSync(data);
+	const manifestBytes = files[MANIFEST];
+	if (!manifestBytes) throw new Error('Not a valid file: missing meal-plan.json.');
+	const manifest = JSON.parse(strFromU8(manifestBytes));
+	if (typeof manifest.format !== 'number' || manifest.format > FORMAT) {
+		throw new Error('This file was made by a newer version of the app.');
+	}
+
+	const repo = await getRepo();
+	const ws = await repo.find<WorkspaceDoc>(await getWorkspaceUrl());
+	const flushed: DocumentId[] = [];
+
+	// Restore any embedded photos (defensive — vault files carry none).
+	for (const name of Object.keys(files)) {
+		if (name.startsWith('photos/') && !name.includes('..')) {
+			await putPhoto(new Blob([files[name] as BlobPart]));
+		}
+	}
+
+	const newUrls: AutomergeUrl[] = [];
+	for (const r of manifest.recipes ?? []) {
+		const handle = repo.create<RecipeDoc>({ ...r, schema: 1 });
+		newUrls.push(handle.url);
+		flushed.push(handle.documentId);
+	}
+	ws.change((w) => {
+		for (const url of newUrls) w.recipe_ids.push(url);
+	});
+	flushed.push(ws.documentId);
+	await repo.flush(flushed);
+
+	return { recipes: newUrls.length };
+}
